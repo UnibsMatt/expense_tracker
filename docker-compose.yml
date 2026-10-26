@@ -1,0 +1,27 @@
+name: expenses-tracker
+
+services:
+  backend:
+    build: ./backend
+    image: expenses-tracker-backend:latest
+    restart: unless-stopped
+    environment:
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+    volumes:
+      - expenses-data:/data
+
+  frontend:
+    build: ./frontend
+    image: expenses-tracker-frontend:latest
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    # Point your nginx reverse proxy (tracker.bligny44.site) at this port.
+    ports:
+      - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-8095}:80"
+
+volumes:
+  expenses-data:
